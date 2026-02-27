@@ -512,8 +512,6 @@ INSERT INTO ReportePagos (Reporte_ID, Contrato_ID, Fecha_Reporte, Monto_Pendient
 
 -- ================================================================
 -- BLOQUE 14: TABLAS DE LOGS (fuera de la normalización)
--- Registros técnicos del sistema — no forman parte del modelo
--- de negocio, son tablas de soporte para monitoreo y trazabilidad
 -- ================================================================
 
 -- ------------------------------------------------------------
@@ -558,31 +556,3 @@ CREATE INDEX IDX_LogsErrores_Lugar  ON Logs_Errores(Lugar_Error);
 CREATE INDEX IDX_LogsCambios_Fecha  ON Logs_Cambios(Fecha_Cambio);
 CREATE INDEX IDX_LogsCambios_Lugar  ON Logs_Cambios(Lugar_Cambio);
 
--- ----------------------------------------------------------------
--- DML — Datos de ejemplo para Logs_Errores
--- ----------------------------------------------------------------
-INSERT INTO Logs_Errores (Fecha_Error, Nombre_Error, Lugar_Error, Detalle) VALUES
-('2024-01-15 09:05:00', 'FK_VIOLATION',    'Tabla: Contratos',          'Intento de insertar Cliente_ID inexistente CLI-99'),
-('2024-02-01 10:12:00', 'DUPLICATE_KEY',   'Tabla: Personas',           'Email duplicado: m.lopez@mail.com ya existe'),
-('2024-03-10 11:20:00', 'NULL_VALUE',       'Trigger: trg_estado_prop',  'Propiedad_ID nulo al intentar registrar cambio de estado'),
-('2024-04-05 14:35:00', 'FK_VIOLATION',    'Tabla: Pagos',              'Intento de insertar EstadoPago_ID inexistente EPG-99'),
-('2024-05-20 09:45:00', 'DATA_TOO_LONG',   'Tabla: Propiedad',          'Dirección supera el límite de 150 caracteres permitidos');
-
--- ----------------------------------------------------------------
--- DML — Datos de ejemplo para Logs_Cambios
--- ----------------------------------------------------------------
-INSERT INTO Logs_Cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion) VALUES
-('2024-01-15 09:00:00', 'INSERT', 'Tabla: Contratos',        'Nuevo contrato CON-001 creado — Arriendo PROP-01 a CLI-01'),
-('2024-01-15 09:01:00', 'UPDATE', 'Tabla: Propiedad',        'PROP-01: EstadoP_ID cambió de EP-01 (Disponible) a EP-02 (Arrendada)'),
-('2024-02-01 10:00:00', 'INSERT', 'Tabla: Contratos',        'Nuevo contrato CON-002 creado — Venta PROP-02 a CLI-02'),
-('2024-02-01 10:01:00', 'UPDATE', 'Tabla: Propiedad',        'PROP-02: EstadoP_ID cambió de EP-01 (Disponible) a EP-03 (Vendida)'),
-('2024-03-10 11:00:00', 'INSERT', 'Tabla: Contratos',        'Nuevo contrato CON-003 creado — Arriendo PROP-03 a CLI-03'),
-('2024-04-05 14:00:00', 'INSERT', 'Tabla: ContratoVenta',    'Venta CV-002 registrada — PROP-04 por $450.000.000'),
-('2024-05-01 08:00:00', 'UPDATE', 'Tabla: Propiedad',        'PROP-05: EstadoP_ID cambió de EP-02 (Arrendada) a EP-01 (Disponible)'),
-('2024-06-12 16:00:00', 'INSERT', 'Tabla: AuditoriaContrato','Auditoría ACO-06 generada para contrato CON-006');
-
--- ================================================================
--- FIN DEL SCRIPT — 20 tablas | 14 bloques DDL+DML
--- 18 tablas del modelo normalizado (3FN)
---  2 tablas de logs técnicos (Logs_Errores, Logs_Cambios)
--- ================================================================
