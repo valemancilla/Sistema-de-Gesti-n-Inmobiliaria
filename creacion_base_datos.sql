@@ -1,3 +1,9 @@
+-- ================================================================
+--  SISTEMA DE GESTIÓN INMOBILIARIA
+--  Script DDL + DML — Creación de base de datos
+--  Modelo normalizado hasta 3FN  |  20 tablas
+--  Motor: MySQL 8.0+
+-- ================================================================
 
 DROP DATABASE IF EXISTS inmobiliaria_db;
 CREATE DATABASE inmobiliaria_db
@@ -16,9 +22,9 @@ USE inmobiliaria_db;
 -- PK: Ciudad_ID
 -- ------------------------------------------------------------
 CREATE TABLE Ciudad (
-    Ciudad_ID    VARCHAR(10)  NOT NULL,
+    Ciudad_ID     VARCHAR(10)  NOT NULL,
     Nombre_Ciudad VARCHAR(100) NOT NULL,
-    Departamento VARCHAR(100) NOT NULL,
+    Departamento  VARCHAR(100) NOT NULL,
     CONSTRAINT PK_Ciudad PRIMARY KEY (Ciudad_ID)
 ) ENGINE=InnoDB;
 
@@ -28,11 +34,11 @@ CREATE TABLE Ciudad (
 -- FK: Ciudad_ID → Ciudad
 -- ------------------------------------------------------------
 CREATE TABLE Barrio (
-    Barrio_ID    VARCHAR(10)  NOT NULL,
+    Barrio_ID     VARCHAR(10)  NOT NULL,
     Nombre_Barrio VARCHAR(100) NOT NULL,
-    Ciudad_ID    VARCHAR(10)  NOT NULL,
-    CONSTRAINT PK_Barrio         PRIMARY KEY (Barrio_ID),
-    CONSTRAINT FK_Barrio_Ciudad  FOREIGN KEY (Ciudad_ID)
+    Ciudad_ID     VARCHAR(10)  NOT NULL,
+    CONSTRAINT PK_Barrio        PRIMARY KEY (Barrio_ID),
+    CONSTRAINT FK_Barrio_Ciudad FOREIGN KEY (Ciudad_ID)
         REFERENCES Ciudad(Ciudad_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -92,8 +98,8 @@ CREATE TABLE Personas (
     Apellido   VARCHAR(80)  NOT NULL,
     Telefono   VARCHAR(20)  NOT NULL,
     Email      VARCHAR(120) NOT NULL,
-    CONSTRAINT PK_Personas        PRIMARY KEY (Persona_ID),
-    CONSTRAINT UQ_Personas_Email  UNIQUE (Email)
+    CONSTRAINT PK_Personas       PRIMARY KEY (Persona_ID),
+    CONSTRAINT UQ_Personas_Email UNIQUE (Email)
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
@@ -117,14 +123,14 @@ CREATE TABLE Clientes (
 -- FK: Persona_ID → Personas
 -- ------------------------------------------------------------
 CREATE TABLE Agentes (
-    Agente_ID    VARCHAR(10)   NOT NULL,
-    Persona_ID   VARCHAR(10)   NOT NULL,
-    Comision_Pct DECIMAL(5,2)  NOT NULL COMMENT 'Porcentaje de comisión. Ejemplo: 5.00 = 5%',
-    CONSTRAINT PK_Agentes           PRIMARY KEY (Agente_ID),
-    CONSTRAINT FK_Agentes_Personas  FOREIGN KEY (Persona_ID)
+    Agente_ID    VARCHAR(10)  NOT NULL,
+    Persona_ID   VARCHAR(10)  NOT NULL,
+    Comision_Pct DECIMAL(5,2) NOT NULL COMMENT 'Porcentaje de comisión. Ejemplo: 5.00 = 5%',
+    CONSTRAINT PK_Agentes          PRIMARY KEY (Agente_ID),
+    CONSTRAINT FK_Agentes_Personas FOREIGN KEY (Persona_ID)
         REFERENCES Personas(Persona_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT UQ_Agentes_Persona   UNIQUE (Persona_ID)
+    CONSTRAINT UQ_Agentes_Persona  UNIQUE (Persona_ID)
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
@@ -138,14 +144,14 @@ CREATE TABLE UsuarioSistema (
     Persona_ID    VARCHAR(10) NOT NULL,
     Rol_ID        VARCHAR(10) NOT NULL,
     NombreUsuario VARCHAR(60) NOT NULL,
-    CONSTRAINT PK_UsuarioSistema          PRIMARY KEY (Usuario_ID),
-    CONSTRAINT FK_Usuario_Personas        FOREIGN KEY (Persona_ID)
+    CONSTRAINT PK_UsuarioSistema       PRIMARY KEY (Usuario_ID),
+    CONSTRAINT FK_Usuario_Personas     FOREIGN KEY (Persona_ID)
         REFERENCES Personas(Persona_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_Usuario_Rol             FOREIGN KEY (Rol_ID)
+    CONSTRAINT FK_Usuario_Rol          FOREIGN KEY (Rol_ID)
         REFERENCES Rol(Rol_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT UQ_UsuarioSistema_Login    UNIQUE (NombreUsuario)
+    CONSTRAINT UQ_UsuarioSistema_Login UNIQUE (NombreUsuario)
 ) ENGINE=InnoDB;
 
 -- ================================================================
@@ -160,20 +166,20 @@ CREATE TABLE UsuarioSistema (
 -- FK: Barrio_ID  → Barrio
 -- ------------------------------------------------------------
 CREATE TABLE Propiedad (
-    Propiedad_ID     VARCHAR(10)    NOT NULL,
-    Direccion        VARCHAR(150)   NOT NULL,
-    Precio_Propiedad DECIMAL(15,2)  NOT NULL,
-    TipoP_ID         VARCHAR(10)    NOT NULL,
-    EstadoP_ID       VARCHAR(10)    NOT NULL,
-    Barrio_ID        VARCHAR(10)    NOT NULL,
-    CONSTRAINT PK_Propiedad            PRIMARY KEY (Propiedad_ID),
-    CONSTRAINT FK_Propiedad_Tipo       FOREIGN KEY (TipoP_ID)
+    Propiedad_ID     VARCHAR(10)   NOT NULL,
+    Direccion        VARCHAR(150)  NOT NULL,
+    Precio_Propiedad DECIMAL(15,2) NOT NULL,
+    TipoP_ID         VARCHAR(10)   NOT NULL,
+    EstadoP_ID       VARCHAR(10)   NOT NULL,
+    Barrio_ID        VARCHAR(10)   NOT NULL,
+    CONSTRAINT PK_Propiedad          PRIMARY KEY (Propiedad_ID),
+    CONSTRAINT FK_Propiedad_Tipo     FOREIGN KEY (TipoP_ID)
         REFERENCES TipoPropiedad(TipoP_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_Propiedad_Estado     FOREIGN KEY (EstadoP_ID)
+    CONSTRAINT FK_Propiedad_Estado   FOREIGN KEY (EstadoP_ID)
         REFERENCES EstadoPropiedad(EstadoP_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_Propiedad_Barrio     FOREIGN KEY (Barrio_ID)
+    CONSTRAINT FK_Propiedad_Barrio   FOREIGN KEY (Barrio_ID)
         REFERENCES Barrio(Barrio_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -196,14 +202,14 @@ CREATE TABLE Contratos (
     Cliente_ID     VARCHAR(10)              NOT NULL,
     Agente_ID      VARCHAR(10)              NOT NULL,
     Propiedad_ID   VARCHAR(10)              NOT NULL,
-    CONSTRAINT PK_Contratos              PRIMARY KEY (Contrato_ID),
-    CONSTRAINT FK_Contratos_Cliente      FOREIGN KEY (Cliente_ID)
+    CONSTRAINT PK_Contratos           PRIMARY KEY (Contrato_ID),
+    CONSTRAINT FK_Contratos_Cliente   FOREIGN KEY (Cliente_ID)
         REFERENCES Clientes(Cliente_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_Contratos_Agente       FOREIGN KEY (Agente_ID)
+    CONSTRAINT FK_Contratos_Agente    FOREIGN KEY (Agente_ID)
         REFERENCES Agentes(Agente_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_Contratos_Propiedad    FOREIGN KEY (Propiedad_ID)
+    CONSTRAINT FK_Contratos_Propiedad FOREIGN KEY (Propiedad_ID)
         REFERENCES Propiedad(Propiedad_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -219,11 +225,11 @@ CREATE TABLE ContratoArriendo (
     Valor_Mensual DECIMAL(12,2) NOT NULL,
     Fecha_Inicio  DATE          NOT NULL,
     Fecha_Fin     DATE          NOT NULL,
-    CONSTRAINT PK_ContratoArriendo       PRIMARY KEY (ContrArr_ID),
-    CONSTRAINT FK_ContrArr_Contratos     FOREIGN KEY (Contrato_ID)
+    CONSTRAINT PK_ContratoArriendo   PRIMARY KEY (ContrArr_ID),
+    CONSTRAINT FK_ContrArr_Contratos FOREIGN KEY (Contrato_ID)
         REFERENCES Contratos(Contrato_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT UQ_ContrArr_Contrato      UNIQUE (Contrato_ID)
+    CONSTRAINT UQ_ContrArr_Contrato  UNIQUE (Contrato_ID)
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
@@ -237,11 +243,11 @@ CREATE TABLE ContratoVenta (
     Precio_Venta    DECIMAL(15,2) NOT NULL,
     Comision_Venta  DECIMAL(15,2) NOT NULL,
     Fecha_Escritura DATE          NOT NULL,
-    CONSTRAINT PK_ContratoVenta          PRIMARY KEY (ContrVenta_ID),
-    CONSTRAINT FK_ContrVenta_Contratos   FOREIGN KEY (Contrato_ID)
+    CONSTRAINT PK_ContratoVenta        PRIMARY KEY (ContrVenta_ID),
+    CONSTRAINT FK_ContrVenta_Contratos FOREIGN KEY (Contrato_ID)
         REFERENCES Contratos(Contrato_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT UQ_ContrVenta_Contrato    UNIQUE (Contrato_ID)
+    CONSTRAINT UQ_ContrVenta_Contrato  UNIQUE (Contrato_ID)
 ) ENGINE=InnoDB;
 
 -- ================================================================
@@ -253,6 +259,8 @@ CREATE TABLE ContratoVenta (
 -- PK: Pago_ID
 -- FK: Contrato_ID   → Contratos
 -- FK: EstadoPago_ID → EstadoPago
+-- CORRECCIÓN: EstadoPago_ID es NOT NULL — todo pago debe tener
+-- un estado obligatorio. La relación es obligatoria, no opcional.
 -- ------------------------------------------------------------
 CREATE TABLE Pagos (
     Pago_ID       VARCHAR(10)   NOT NULL,
@@ -260,11 +268,11 @@ CREATE TABLE Pagos (
     Fecha_Pago    DATE          NOT NULL,
     Monto_Pago    DECIMAL(12,2) NOT NULL,
     EstadoPago_ID VARCHAR(10)   NOT NULL,
-    CONSTRAINT PK_Pagos                PRIMARY KEY (Pago_ID),
-    CONSTRAINT FK_Pagos_Contratos      FOREIGN KEY (Contrato_ID)
+    CONSTRAINT PK_Pagos            PRIMARY KEY (Pago_ID),
+    CONSTRAINT FK_Pagos_Contratos  FOREIGN KEY (Contrato_ID)
         REFERENCES Contratos(Contrato_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_Pagos_EstadoPago     FOREIGN KEY (EstadoPago_ID)
+    CONSTRAINT FK_Pagos_EstadoPago FOREIGN KEY (EstadoPago_ID)
         REFERENCES EstadoPago(EstadoPago_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -278,6 +286,9 @@ CREATE TABLE Pagos (
 -- PK: AuditCon_ID
 -- FK: Contrato_ID → Contratos
 -- FK: Usuario_ID  → UsuarioSistema
+-- CORRECCIÓN: Usuario_ID referencia UsuarioSistema con FK real
+-- en lugar de texto libre — garantiza trazabilidad con rol
+-- del usuario en el momento del evento
 -- ------------------------------------------------------------
 CREATE TABLE AuditoriaContrato (
     AuditCon_ID  VARCHAR(10)  NOT NULL,
@@ -286,11 +297,11 @@ CREATE TABLE AuditoriaContrato (
     Fecha_Evento DATE         NOT NULL,
     Usuario_ID   VARCHAR(10)  NOT NULL,
     Fecha_Hora   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT PK_AuditoriaContrato       PRIMARY KEY (AuditCon_ID),
-    CONSTRAINT FK_AuditCon_Contratos      FOREIGN KEY (Contrato_ID)
+    CONSTRAINT PK_AuditoriaContrato  PRIMARY KEY (AuditCon_ID),
+    CONSTRAINT FK_AuditCon_Contratos FOREIGN KEY (Contrato_ID)
         REFERENCES Contratos(Contrato_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_AuditCon_Usuario        FOREIGN KEY (Usuario_ID)
+    CONSTRAINT FK_AuditCon_Usuario   FOREIGN KEY (Usuario_ID)
         REFERENCES UsuarioSistema(Usuario_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -300,6 +311,12 @@ CREATE TABLE AuditoriaContrato (
 -- PK: Audit_ID
 -- FK: Propiedad_ID → Propiedad
 -- FK: Usuario_ID   → UsuarioSistema
+-- CORRECCIÓN 1: Usuario_ID referencia UsuarioSistema con FK real
+-- en lugar de texto libre — garantiza trazabilidad con rol
+-- CORRECCIÓN 2: Estado_Anterior y Estado_Nuevo se mantienen
+-- como VARCHAR(50) sin FK a EstadoPropiedad — decisión correcta
+-- porque es un registro histórico: si un estado se elimina del
+-- catálogo la auditoría no debe perder el dato histórico
 -- ------------------------------------------------------------
 CREATE TABLE AuditoriaPropiedad (
     Audit_ID        VARCHAR(10) NOT NULL,
@@ -309,11 +326,11 @@ CREATE TABLE AuditoriaPropiedad (
     Fecha_Cambio    DATE        NOT NULL,
     Usuario_ID      VARCHAR(10) NOT NULL,
     Fecha_Hora      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT PK_AuditoriaPropiedad      PRIMARY KEY (Audit_ID),
-    CONSTRAINT FK_AuditProp_Propiedad     FOREIGN KEY (Propiedad_ID)
+    CONSTRAINT PK_AuditoriaPropiedad  PRIMARY KEY (Audit_ID),
+    CONSTRAINT FK_AuditProp_Propiedad FOREIGN KEY (Propiedad_ID)
         REFERENCES Propiedad(Propiedad_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT FK_AuditProp_Usuario       FOREIGN KEY (Usuario_ID)
+    CONSTRAINT FK_AuditProp_Usuario   FOREIGN KEY (Usuario_ID)
         REFERENCES UsuarioSistema(Usuario_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
@@ -330,34 +347,68 @@ CREATE TABLE ReportePagos (
     Monto_Pendiente DECIMAL(12,2) NOT NULL,
     Descripcion     VARCHAR(200)  NOT NULL,
     Periodo         VARCHAR(7)    NOT NULL COMMENT 'Formato YYYY-MM',
-    CONSTRAINT PK_ReportePagos         PRIMARY KEY (Reporte_ID),
-    CONSTRAINT FK_Reporte_Contratos    FOREIGN KEY (Contrato_ID)
+    CONSTRAINT PK_ReportePagos      PRIMARY KEY (Reporte_ID),
+    CONSTRAINT FK_Reporte_Contratos FOREIGN KEY (Contrato_ID)
         REFERENCES Contratos(Contrato_ID)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
 -- ================================================================
--- BLOQUE 7: ÍNDICES PARA OPTIMIZACIÓN DE CONSULTAS
+-- BLOQUE 7: TABLAS DE LOGS (fuera de la normalización)
+-- Sin FK hacia otras tablas — deben funcionar de forma autónoma
+-- incluso cuando ocurren errores de integridad referencial
 -- ================================================================
 
-CREATE INDEX IDX_Barrio_Ciudad       ON Barrio(Ciudad_ID);
-CREATE INDEX IDX_Propiedad_Tipo      ON Propiedad(TipoP_ID);
-CREATE INDEX IDX_Propiedad_Estado    ON Propiedad(EstadoP_ID);
-CREATE INDEX IDX_Propiedad_Barrio    ON Propiedad(Barrio_ID);
-CREATE INDEX IDX_Contratos_Cliente   ON Contratos(Cliente_ID);
-CREATE INDEX IDX_Contratos_Agente    ON Contratos(Agente_ID);
-CREATE INDEX IDX_Contratos_Prop      ON Contratos(Propiedad_ID);
-CREATE INDEX IDX_Contratos_Tipo      ON Contratos(Tipo_Contrato);
-CREATE INDEX IDX_Pagos_Contrato      ON Pagos(Contrato_ID);
-CREATE INDEX IDX_Pagos_Estado        ON Pagos(EstadoPago_ID);
-CREATE INDEX IDX_Pagos_Fecha         ON Pagos(Fecha_Pago);
+-- ------------------------------------------------------------
+-- Logs_Errores
+-- ------------------------------------------------------------
+CREATE TABLE Logs_Errores (
+    Log_ID       INT          NOT NULL AUTO_INCREMENT,
+    Fecha_Error  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Nombre_Error VARCHAR(150) NOT NULL COMMENT 'Tipo o nombre del error. Ej: DUPLICATE_KEY, FK_VIOLATION',
+    Lugar_Error  VARCHAR(200) NOT NULL COMMENT 'Tabla, trigger o procedimiento donde ocurrió',
+    Detalle      TEXT                  COMMENT 'Mensaje completo del error (opcional)',
+    CONSTRAINT PK_Logs_Errores PRIMARY KEY (Log_ID)
+) ENGINE=InnoDB;
+
+-- ------------------------------------------------------------
+-- Logs_Cambios
+-- ------------------------------------------------------------
+CREATE TABLE Logs_Cambios (
+    Log_ID        INT          NOT NULL AUTO_INCREMENT,
+    Fecha_Cambio  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Nombre_Cambio VARCHAR(150) NOT NULL COMMENT 'Tipo de operación. Ej: INSERT, UPDATE, DELETE',
+    Lugar_Cambio  VARCHAR(200) NOT NULL COMMENT 'Tabla o proceso donde se realizó el cambio',
+    Descripcion   TEXT                  COMMENT 'Detalle del cambio: valores anteriores o nuevos (opcional)',
+    CONSTRAINT PK_Logs_Cambios PRIMARY KEY (Log_ID)
+) ENGINE=InnoDB;
+
+-- ================================================================
+-- BLOQUE 8: ÍNDICES PARA OPTIMIZACIÓN DE CONSULTAS
+-- ================================================================
+
+CREATE INDEX IDX_Barrio_Ciudad        ON Barrio(Ciudad_ID);
+CREATE INDEX IDX_Propiedad_Tipo       ON Propiedad(TipoP_ID);
+CREATE INDEX IDX_Propiedad_Estado     ON Propiedad(EstadoP_ID);
+CREATE INDEX IDX_Propiedad_Barrio     ON Propiedad(Barrio_ID);
+CREATE INDEX IDX_Contratos_Cliente    ON Contratos(Cliente_ID);
+CREATE INDEX IDX_Contratos_Agente     ON Contratos(Agente_ID);
+CREATE INDEX IDX_Contratos_Prop       ON Contratos(Propiedad_ID);
+CREATE INDEX IDX_Contratos_Tipo       ON Contratos(Tipo_Contrato);
+CREATE INDEX IDX_Pagos_Contrato       ON Pagos(Contrato_ID);
+CREATE INDEX IDX_Pagos_Estado         ON Pagos(EstadoPago_ID);
+CREATE INDEX IDX_Pagos_Fecha          ON Pagos(Fecha_Pago);
 CREATE INDEX IDX_ReportePagos_Periodo ON ReportePagos(Periodo);
-CREATE INDEX IDX_Usuario_Rol         ON UsuarioSistema(Rol_ID);
-CREATE INDEX IDX_AuditCon_Contrato   ON AuditoriaContrato(Contrato_ID);
-CREATE INDEX IDX_AuditProp_Prop      ON AuditoriaPropiedad(Propiedad_ID);
+CREATE INDEX IDX_Usuario_Rol          ON UsuarioSistema(Rol_ID);
+CREATE INDEX IDX_AuditCon_Contrato    ON AuditoriaContrato(Contrato_ID);
+CREATE INDEX IDX_AuditProp_Prop       ON AuditoriaPropiedad(Propiedad_ID);
+CREATE INDEX IDX_LogsErrores_Fecha    ON Logs_Errores(Fecha_Error);
+CREATE INDEX IDX_LogsErrores_Lugar    ON Logs_Errores(Lugar_Error);
+CREATE INDEX IDX_LogsCambios_Fecha    ON Logs_Cambios(Fecha_Cambio);
+CREATE INDEX IDX_LogsCambios_Lugar    ON Logs_Cambios(Lugar_Cambio);
 
 -- ================================================================
--- BLOQUE 8: DML — CATÁLOGOS BASE
+-- BLOQUE 9: DML — CATÁLOGOS BASE
 -- ================================================================
 
 INSERT INTO Ciudad (Ciudad_ID, Nombre_Ciudad, Departamento) VALUES
@@ -397,7 +448,7 @@ INSERT INTO Rol (Rol_ID, Nombre_Rol, Descripcion) VALUES
 ('ROL-04', 'Contador',      'Acceso a pagos y reportes financieros');
 
 -- ================================================================
--- BLOQUE 9: DML — PERSONAS, CLIENTES, AGENTES Y USUARIOS
+-- BLOQUE 10: DML — PERSONAS, CLIENTES, AGENTES Y USUARIOS
 -- ================================================================
 
 INSERT INTO Personas (Persona_ID, Nombre, Apellido, Telefono, Email) VALUES
@@ -436,19 +487,19 @@ INSERT INTO UsuarioSistema (Usuario_ID, Persona_ID, Rol_ID, NombreUsuario) VALUE
 ('USR-09', 'PER-06', 'ROL-03', 'cli_elena');
 
 -- ================================================================
--- BLOQUE 10: DML — PROPIEDADES
+-- BLOQUE 11: DML — PROPIEDADES
 -- ================================================================
 
 INSERT INTO Propiedad (Propiedad_ID, Direccion, Precio_Propiedad, TipoP_ID, EstadoP_ID, Barrio_ID) VALUES
-('PROP-01', 'Cra 10 #45-20',    250000000.00, 'TP-01', 'EP-02', 'BAR-01'),
-('PROP-02', 'Calle 35 #12-05',  320000000.00, 'TP-02', 'EP-03', 'BAR-02'),
-('PROP-03', 'Av 27 #60-15',     180000000.00, 'TP-03', 'EP-02', 'BAR-03'),
-('PROP-04', 'Cra 52 #80-30',    450000000.00, 'TP-02', 'EP-03', 'BAR-04'),
-('PROP-05', 'Calle 9 #22-10',   200000000.00, 'TP-01', 'EP-01', 'BAR-05'),
-('PROP-06', 'Cra 15 #33-40',    280000000.00, 'TP-03', 'EP-03', 'BAR-06');
+('PROP-01', 'Cra 10 #45-20',   250000000.00, 'TP-01', 'EP-02', 'BAR-01'),
+('PROP-02', 'Calle 35 #12-05', 320000000.00, 'TP-02', 'EP-03', 'BAR-02'),
+('PROP-03', 'Av 27 #60-15',    180000000.00, 'TP-03', 'EP-02', 'BAR-03'),
+('PROP-04', 'Cra 52 #80-30',   450000000.00, 'TP-02', 'EP-03', 'BAR-04'),
+('PROP-05', 'Calle 9 #22-10',  200000000.00, 'TP-01', 'EP-01', 'BAR-05'),
+('PROP-06', 'Cra 15 #33-40',   280000000.00, 'TP-03', 'EP-03', 'BAR-06');
 
 -- ================================================================
--- BLOQUE 11: DML — CONTRATOS, ARRIENDOS Y VENTAS
+-- BLOQUE 12: DML — CONTRATOS, ARRIENDOS Y VENTAS
 -- ================================================================
 
 INSERT INTO Contratos (Contrato_ID, Fecha_Contrato, Tipo_Contrato, Cliente_ID, Agente_ID, Propiedad_ID) VALUES
@@ -470,7 +521,7 @@ INSERT INTO ContratoVenta (ContrVenta_ID, Contrato_ID, Precio_Venta, Comision_Ve
 ('CV-003', 'CON-006', 280000000.00,  8400000.00, '2024-06-25');
 
 -- ================================================================
--- BLOQUE 12: DML — PAGOS
+-- BLOQUE 13: DML — PAGOS
 -- ================================================================
 
 INSERT INTO Pagos (Pago_ID, Contrato_ID, Fecha_Pago, Monto_Pago, EstadoPago_ID) VALUES
@@ -485,7 +536,7 @@ INSERT INTO Pagos (Pago_ID, Contrato_ID, Fecha_Pago, Monto_Pago, EstadoPago_ID) 
 ('PAG-009', 'CON-006', '2024-06-12',  8400000.00, 'EPG-01');
 
 -- ================================================================
--- BLOQUE 13: DML — AUDITORÍA Y REPORTES
+-- BLOQUE 14: DML — AUDITORÍA Y REPORTES
 -- ================================================================
 
 INSERT INTO AuditoriaContrato (AuditCon_ID, Contrato_ID, Evento, Fecha_Evento, Usuario_ID, Fecha_Hora) VALUES
@@ -509,50 +560,4 @@ INSERT INTO ReportePagos (Reporte_ID, Contrato_ID, Fecha_Reporte, Monto_Pendient
 ('REP-002', 'CON-003', '2024-04-01', 1200000.00, 'Pago mes 2 pendiente',   '2024-04'),
 ('REP-003', 'CON-001', '2024-03-01',  800000.00, 'Pago mes 3 pendiente',   '2024-03'),
 ('REP-004', 'CON-005', '2024-06-01',  950000.00, 'Pago vencido mayo 2024', '2024-06');
-
--- ================================================================
--- BLOQUE 14: TABLAS DE LOGS (fuera de la normalización)
--- ================================================================
-
--- ------------------------------------------------------------
--- Logs_Errores
--- Registra cada error técnico que ocurra en el sistema
---   Fecha_Error  : cuándo ocurrió el error
---   Nombre_Error : tipo o nombre del error  (ej: FK_VIOLATION)
---   Lugar_Error  : dónde ocurrió            (ej: tabla, procedimiento, trigger)
--- No tiene FK hacia otras tablas — debe poder registrar errores
--- incluso cuando la BD está en estado inconsistente
--- ------------------------------------------------------------
-CREATE TABLE Logs_Errores (
-    Log_ID       INT           NOT NULL AUTO_INCREMENT,
-    Fecha_Error  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    Nombre_Error VARCHAR(150)  NOT NULL COMMENT 'Tipo o nombre del error. Ej: DUPLICATE_KEY, FK_VIOLATION',
-    Lugar_Error  VARCHAR(200)  NOT NULL COMMENT 'Tabla, trigger o procedimiento donde ocurrió',
-    Detalle      TEXT                   COMMENT 'Mensaje completo del error (opcional)',
-    CONSTRAINT PK_Logs_Errores PRIMARY KEY (Log_ID)
-) ENGINE=InnoDB;
-
--- ------------------------------------------------------------
--- Logs_Cambios
--- Registra cada modificación relevante hecha sobre los datos
---   Fecha_Cambio : cuándo se realizó el cambio
---   Nombre_Cambio: qué tipo de operación fue (INSERT/UPDATE/DELETE)
---   Lugar_Cambio : en qué tabla o proceso ocurrió el cambio
--- ------------------------------------------------------------
-CREATE TABLE Logs_Cambios (
-    Log_ID        INT           NOT NULL AUTO_INCREMENT,
-    Fecha_Cambio  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    Nombre_Cambio VARCHAR(150)  NOT NULL COMMENT 'Tipo de operación. Ej: INSERT, UPDATE, DELETE',
-    Lugar_Cambio  VARCHAR(200)  NOT NULL COMMENT 'Tabla o proceso donde se realizó el cambio',
-    Descripcion   TEXT                   COMMENT 'Detalle del cambio: valores anteriores o nuevos (opcional)',
-    CONSTRAINT PK_Logs_Cambios PRIMARY KEY (Log_ID)
-) ENGINE=InnoDB;
-
--- ----------------------------------------------------------------
--- Índices para búsquedas rápidas por fecha en los logs
--- ----------------------------------------------------------------
-CREATE INDEX IDX_LogsErrores_Fecha  ON Logs_Errores(Fecha_Error);
-CREATE INDEX IDX_LogsErrores_Lugar  ON Logs_Errores(Lugar_Error);
-CREATE INDEX IDX_LogsCambios_Fecha  ON Logs_Cambios(Fecha_Cambio);
-CREATE INDEX IDX_LogsCambios_Lugar  ON Logs_Cambios(Lugar_Cambio);
 
