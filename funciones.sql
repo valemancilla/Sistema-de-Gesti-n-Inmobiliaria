@@ -1,8 +1,3 @@
--- ================================================================
---  SISTEMA DE GESTIÓN INMOBILIARIA
---  Punto 3 — Funciones Personalizadas (UDFs)
---  Motor: MySQL 8.0+
--- ================================================================
 
 USE inmobiliaria_db;
 
@@ -13,7 +8,6 @@ USE inmobiliaria_db;
 -- ================================================================
 SET GLOBAL log_bin_trust_function_creators = 1;
 
-DELIMITER $$
 
 -- ================================================================
 -- FUNCIÓN 1: calcular_comision
@@ -27,11 +21,11 @@ DELIMITER $$
 -- Parámetro: p_contrato_id — ID del contrato de venta (ej: 'CON-002')
 -- Retorna:   DECIMAL(15,2) — monto de la comisión en pesos
 --            NULL si el contrato no existe o no es de tipo Venta
---
--- Ejemplo de uso:
---   SELECT calcular_comision('CON-002');
---   -- Resultado: 9600000.00  (3% de $320.000.000)
 -- ================================================================
+DROP FUNCTION IF EXISTS calcular_comision;
+
+DELIMITER $$
+
 CREATE FUNCTION calcular_comision(p_contrato_id VARCHAR(10))
 RETURNS DECIMAL(15,2)
 DETERMINISTIC
@@ -75,6 +69,13 @@ BEGIN
     RETURN v_resultado;
 END$$
 
+DELIMITER ;
+
+-- =====================
+-- Ejemplo de uso:
+-- =====================
+SELECT calcular_comision('CON-002');
+
 
 -- ================================================================
 -- FUNCIÓN 2: calcular_deuda_pendiente
@@ -90,14 +91,11 @@ END$$
 -- Parámetro: p_contrato_id — ID del contrato de arriendo (ej: 'CON-001')
 -- Retorna:   DECIMAL(12,2) — suma total de pagos no saldados
 --            0.00 si no hay pagos pendientes
---
--- Ejemplo de uso:
---   SELECT calcular_deuda_pendiente('CON-001');
---   -- Resultado: 800000.00  (PAG-003 pendiente)
---
---   SELECT calcular_deuda_pendiente('CON-005');
---   -- Resultado: 950000.00  (PAG-008 vencido)
 -- ================================================================
+DROP FUNCTION IF EXISTS calcular_deuda_pendiente;
+
+DELIMITER $$
+
 CREATE FUNCTION calcular_deuda_pendiente(p_contrato_id VARCHAR(10))
 RETURNS DECIMAL(12,2)
 DETERMINISTIC
@@ -115,6 +113,14 @@ BEGIN
     RETURN v_deuda;
 END$$
 
+DELIMITER ;
+
+-- =====================
+-- Ejemplo de uso:
+-- =====================
+SELECT calcular_deuda_pendiente('CON-001');
+SELECT calcular_deuda_pendiente('CON-005');
+
 
 -- ================================================================
 -- FUNCIÓN 3: total_disponibles_por_tipo
@@ -129,14 +135,11 @@ END$$
 --            'TP-02' = Casa
 --            'TP-03' = Local Comercial
 -- Retorna:   INT — cantidad de propiedades disponibles de ese tipo
---
--- Ejemplo de uso:
---   SELECT total_disponibles_por_tipo('TP-01');
---   -- Resultado: 1  (solo PROP-05 está Disponible y es Apartamento)
---
---   SELECT total_disponibles_por_tipo('TP-02');
---   -- Resultado: 0  (las 2 casas están Vendidas)
 -- ================================================================
+DROP FUNCTION IF EXISTS total_disponibles_por_tipo;
+
+DELIMITER $$
+
 CREATE FUNCTION total_disponibles_por_tipo(p_tipo_id VARCHAR(10))
 RETURNS INT
 DETERMINISTIC
@@ -147,7 +150,7 @@ BEGIN
     SELECT COUNT(*)
     INTO   v_total
     FROM   Propiedad p
-    WHERE  p.TipoP_ID  = p_tipo_id
+    WHERE  p.TipoP_ID   = p_tipo_id
       AND  p.EstadoP_ID = 'EP-01';   -- EP-01 = Disponible
 
     RETURN v_total;
@@ -155,105 +158,51 @@ END$$
 
 DELIMITER ;
 
--- ================================================================
--- VERIFICACIÓN — Consultas de prueba para las 3 funciones
--- Ejecutar después de correr el script de creación completo
--- ================================================================
+-- =====================
+-- Ejemplo de uso:
+-- =====================
+SELECT total_disponibles_por_tipo('TP-01');
+SELECT total_disponibles_por_tipo('TP-02');
 
--- Prueba 1: calcular_comision
--- CON-002: Casa Medellín $320M × 3% (Pedro Gómez) = $9.600.000
--- CON-004: Casa Bogotá   $450M × 3% (Juan Ríos)   = $13.500.000
--- CON-006: Local Barranquilla $280M × 5% (María López) = $14.000.000 ← revisar
--- CON-001: Arriendo → debe retornar NULL
-SELECT
-    'calcular_comision'             AS funcion,
-    'CON-002 (Venta $320M × 3%)'   AS descripcion,
-    calcular_comision('CON-002')    AS resultado
-UNION ALL
-SELECT
-    'calcular_comision',
-    'CON-004 (Venta $450M × 3%)',
-    calcular_comision('CON-004')
-UNION ALL
-SELECT
-    'calcular_comision',
-    'CON-006 (Venta $280M × 5%)',
-    calcular_comision('CON-006')
-UNION ALL
-SELECT
-    'calcular_comision',
-    'CON-001 (Arriendo → NULL)',
-    calcular_comision('CON-001');
-
--- Prueba 2: calcular_deuda_pendiente
--- CON-001: PAG-003 Pendiente $800.000 → deuda: $800.000
--- CON-003: PAG-006 Pendiente $1.200.000 → deuda: $1.200.000
--- CON-005: PAG-008 Vencido $950.000 → deuda: $950.000
--- CON-002: todos Pagados → deuda: $0
-SELECT
-    'calcular_deuda_pendiente'                  AS funcion,
-    'CON-001 (1 pago pendiente)'                AS descripcion,
-    calcular_deuda_pendiente('CON-001')         AS resultado
-UNION ALL
-SELECT
-    'calcular_deuda_pendiente',
-    'CON-003 (1 pago pendiente)',
-    calcular_deuda_pendiente('CON-003')
-UNION ALL
-SELECT
-    'calcular_deuda_pendiente',
-    'CON-005 (1 pago vencido)',
-    calcular_deuda_pendiente('CON-005')
-UNION ALL
-SELECT
-    'calcular_deuda_pendiente',
-    'CON-002 (todo pagado → 0)',
-    calcular_deuda_pendiente('CON-002');
-
--- Prueba 3: total_disponibles_por_tipo
--- TP-01 Apartamento: PROP-05 Disponible → 1
--- TP-02 Casa: PROP-02 Vendida, PROP-04 Vendida → 0
--- TP-03 Local Comercial: PROP-03 Arrendada, PROP-06 Vendida → 0
-SELECT
-    'total_disponibles_por_tipo'            AS funcion,
-    'TP-01 Apartamento'                     AS descripcion,
-    total_disponibles_por_tipo('TP-01')     AS resultado
-UNION ALL
-SELECT
-    'total_disponibles_por_tipo',
-    'TP-02 Casa',
-    total_disponibles_por_tipo('TP-02')
-UNION ALL
-SELECT
-    'total_disponibles_por_tipo',
-    'TP-03 Local Comercial',
-    total_disponibles_por_tipo('TP-03');
 
 -- ================================================================
 -- CONSULTA RESUMEN — Ver todas las comisiones de ventas
+-- Muestra: contrato, tipo, agente, porcentaje, precio y comisión
 -- ================================================================
 SELECT
     c.Contrato_ID,
+    c.Tipo_Contrato,
     CONCAT(p.Nombre, ' ', p.Apellido)   AS agente,
     a.Comision_Pct                      AS pct_comision,
     cv.Precio_Venta                     AS precio_venta,
     calcular_comision(c.Contrato_ID)    AS comision_calculada
 FROM  Contratos c
-JOIN  Agentes a        ON a.Agente_ID   = c.Agente_ID
-JOIN  Personas p       ON p.Persona_ID  = a.Persona_ID
+JOIN  Agentes a        ON a.Agente_ID    = c.Agente_ID
+JOIN  Personas p       ON p.Persona_ID   = a.Persona_ID
 JOIN  ContratoVenta cv ON cv.Contrato_ID = c.Contrato_ID
 WHERE c.Tipo_Contrato = 'Venta';
 
 -- ================================================================
 -- CONSULTA RESUMEN — Ver deuda por contrato de arriendo
+-- Muestra: contrato, tipo, cliente, valor mensual y deuda total
 -- ================================================================
 SELECT
     c.Contrato_ID,
-    CONCAT(pc.Nombre, ' ', pc.Apellido)         AS cliente,
-    ca.Valor_Mensual                             AS valor_mensual,
-    calcular_deuda_pendiente(c.Contrato_ID)      AS deuda_pendiente
+    c.Tipo_Contrato,
+    CONCAT(pc.Nombre, ' ', pc.Apellido)     AS cliente,
+    ca.Valor_Mensual                         AS valor_mensual,
+    calcular_deuda_pendiente(c.Contrato_ID)  AS deuda_pendiente
 FROM  Contratos c
 JOIN  Clientes cl         ON cl.Cliente_ID  = c.Cliente_ID
 JOIN  Personas pc         ON pc.Persona_ID  = cl.Persona_ID
 JOIN  ContratoArriendo ca ON ca.Contrato_ID = c.Contrato_ID
 WHERE c.Tipo_Contrato = 'Arriendo';
+
+-- ================================================================
+-- CONSULTA RESUMEN — Ver disponibles por tipo de propiedad
+-- Muestra el nombre del tipo en lugar del código
+-- ================================================================
+SELECT
+    tp.Descripcion                           AS tipo_propiedad,
+    total_disponibles_por_tipo(tp.TipoP_ID)  AS disponibles
+FROM TipoPropiedad tp;
