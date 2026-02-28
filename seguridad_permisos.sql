@@ -1,4 +1,3 @@
-
 USE inmobiliaria_db;
 
 -- ============================================================
@@ -17,8 +16,6 @@ VALUES (NOW(), 'ELIMINACIÓN USUARIOS ANÓNIMOS', 'mysql.user',
 
 -- ============================================================
 -- PASO 2: PROCEDIMIENTO — Crear los 3 usuarios
--- Aquí sí podemos manejar errores con DECLARE EXIT HANDLER
--- y registrarlos en logs_errores
 -- ============================================================
 
 DROP PROCEDURE IF EXISTS sp_crear_usuarios;
@@ -68,64 +65,149 @@ CALL sp_crear_usuarios();
 
 
 -- ============================================================
--- PASO 3: ADMINISTRADOR
--- Acceso total a toda la base de datos
--- Puede además otorgar permisos a otros usuarios
+-- PASO 3: PROCEDIMIENTO — Privilegios Administrador
 -- ============================================================
 
-GRANT ALL PRIVILEGES ON inmobiliaria_db.*
-TO 'admin_inmobiliaria'@'localhost'
-WITH GRANT OPTION;
+DROP PROCEDURE IF EXISTS sp_privilegios_admin;
 
-INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
-VALUES (NOW(), 'PRIVILEGIOS ADMINISTRADOR', 'inmobiliaria_db.*',
-        'admin_inmobiliaria: ALL PRIVILEGES + WITH GRANT OPTION');
+DELIMITER $$
+
+CREATE PROCEDURE sp_privilegios_admin()
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        INSERT INTO logs_errores (
+            Fecha_Error,
+            Nombre_Error,
+            Lugar_Error,
+            Detalle
+        )
+        VALUES (
+            NOW(),
+            'ERROR AL ASIGNAR PRIVILEGIOS ADMINISTRADOR',
+            'Procedimiento: sp_privilegios_admin',
+            'Falló la asignación de ALL PRIVILEGES a admin_inmobiliaria'
+        );
+    END;
+
+    GRANT ALL PRIVILEGES ON inmobiliaria_db.*
+    TO 'admin_inmobiliaria'@'localhost'
+    WITH GRANT OPTION;
+
+    INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
+    VALUES (NOW(), 'PRIVILEGIOS ADMINISTRADOR', 'inmobiliaria_db.*',
+            'admin_inmobiliaria: ALL PRIVILEGES + WITH GRANT OPTION');
+
+END$$
+
+DELIMITER ;
+
+CALL sp_privilegios_admin();
 
 
 -- ============================================================
--- PASO 4: AGENTE INMOBILIARIO
+-- PASO 4: PROCEDIMIENTO — Privilegios Agente Inmobiliario
 -- Gestiona propiedades, contratos y clientes
 -- No tiene acceso a pagos, reportes ni logs
 -- ============================================================
 
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.propiedad        TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.contratos        TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.contratoventa    TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.contratoarriendo TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.clientes         TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.personas         TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.agentes          TO 'agente_inmobiliario'@'localhost';
+DROP PROCEDURE IF EXISTS sp_privilegios_agente;
 
--- Tablas de catálogo: solo consulta
-GRANT SELECT ON inmobiliaria_db.tipopropiedad   TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT ON inmobiliaria_db.estadopropiedad TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT ON inmobiliaria_db.barrio          TO 'agente_inmobiliario'@'localhost';
-GRANT SELECT ON inmobiliaria_db.ciudad          TO 'agente_inmobiliario'@'localhost';
+DELIMITER $$
 
-INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
-VALUES (NOW(), 'PRIVILEGIOS AGENTE INMOBILIARIO', 'inmobiliaria_db.*',
-        'agente_inmobiliario: SELECT,INSERT,UPDATE en propiedades, contratos y clientes');
+CREATE PROCEDURE sp_privilegios_agente()
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        INSERT INTO logs_errores (
+            Fecha_Error,
+            Nombre_Error,
+            Lugar_Error,
+            Detalle
+        )
+        VALUES (
+            NOW(),
+            'ERROR AL ASIGNAR PRIVILEGIOS AGENTE INMOBILIARIO',
+            'Procedimiento: sp_privilegios_agente',
+            'Falló la asignación de privilegios a agente_inmobiliario'
+        );
+    END;
+
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.propiedad        TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.contratos        TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.contratoventa    TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.contratoarriendo TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.clientes         TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.personas         TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.agentes          TO 'agente_inmobiliario'@'localhost';
+
+    -- Tablas de catálogo: solo consulta
+    GRANT SELECT ON inmobiliaria_db.tipopropiedad   TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.estadopropiedad TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.barrio          TO 'agente_inmobiliario'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.ciudad          TO 'agente_inmobiliario'@'localhost';
+
+    INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
+    VALUES (NOW(), 'PRIVILEGIOS AGENTE INMOBILIARIO', 'inmobiliaria_db.*',
+            'agente_inmobiliario: SELECT,INSERT,UPDATE en propiedades, contratos y clientes');
+
+END$$
+
+DELIMITER ;
+
+CALL sp_privilegios_agente();
 
 
 -- ============================================================
--- PASO 5: CONTADOR
+-- PASO 5: PROCEDIMIENTO — Privilegios Contador
 -- Solo gestiona pagos y reportes
 -- No puede modificar contratos, propiedades ni clientes
 -- ============================================================
 
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.pagos        TO 'contador_inmobiliaria'@'localhost';
-GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.reportepagos TO 'contador_inmobiliaria'@'localhost';
+DROP PROCEDURE IF EXISTS sp_privilegios_contador;
 
--- Solo consulta para cruzar información contable
-GRANT SELECT ON inmobiliaria_db.estadopago       TO 'contador_inmobiliaria'@'localhost';
-GRANT SELECT ON inmobiliaria_db.contratos        TO 'contador_inmobiliaria'@'localhost';
-GRANT SELECT ON inmobiliaria_db.contratoarriendo TO 'contador_inmobiliaria'@'localhost';
-GRANT SELECT ON inmobiliaria_db.propiedad        TO 'contador_inmobiliaria'@'localhost';
-GRANT SELECT ON inmobiliaria_db.clientes         TO 'contador_inmobiliaria'@'localhost';
+DELIMITER $$
 
-INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
-VALUES (NOW(), 'PRIVILEGIOS CONTADOR', 'inmobiliaria_db.*',
-        'contador_inmobiliaria: SELECT,INSERT,UPDATE solo en pagos y reportepagos');
+CREATE PROCEDURE sp_privilegios_contador()
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        INSERT INTO logs_errores (
+            Fecha_Error,
+            Nombre_Error,
+            Lugar_Error,
+            Detalle
+        )
+        VALUES (
+            NOW(),
+            'ERROR AL ASIGNAR PRIVILEGIOS CONTADOR',
+            'Procedimiento: sp_privilegios_contador',
+            'Falló la asignación de privilegios a contador_inmobiliaria'
+        );
+    END;
+
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.pagos        TO 'contador_inmobiliaria'@'localhost';
+    GRANT SELECT, INSERT, UPDATE ON inmobiliaria_db.reportepagos TO 'contador_inmobiliaria'@'localhost';
+
+    -- Solo consulta para cruzar información contable
+    GRANT SELECT ON inmobiliaria_db.estadopago       TO 'contador_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.contratos        TO 'contador_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.contratoarriendo TO 'contador_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.propiedad        TO 'contador_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.clientes         TO 'contador_inmobiliaria'@'localhost';
+
+    INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
+    VALUES (NOW(), 'PRIVILEGIOS CONTADOR', 'inmobiliaria_db.*',
+            'contador_inmobiliaria: SELECT,INSERT,UPDATE solo en pagos y reportepagos');
+
+END$$
+
+DELIMITER ;
+
+CALL sp_privilegios_contador();
 
 
 -- ============================================================

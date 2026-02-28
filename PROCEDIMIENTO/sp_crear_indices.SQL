@@ -1,3 +1,7 @@
+
+
+USE inmobiliaria_db;
+
 -- ============================================================
 -- PROCEDIMIENTO 2: sp_crear_indices
 -- Solo crea índices — usa EXIT HANDLER para registrar
