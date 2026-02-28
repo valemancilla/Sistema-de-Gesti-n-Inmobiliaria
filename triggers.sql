@@ -1,21 +1,41 @@
--- ============================================================
--- TRIGGERS - SISTEMA DE GESTIÓN INMOBILIARIA
--- ============================================================
-
-USE inmobiliaria;
-
-DELIMITER $$
+USE inmobiliaria_db;
 
 -- ============================================================
 -- TRIGGER 1: Cambio de estado de una propiedad
 -- Registra en auditoriapropiedad cuando EstadoP_ID cambia
+-- Registra en logs_cambios el evento
+-- Registra en logs_errores si ocurre un fallo
 -- ============================================================
+
+DELIMITER $$
 
 CREATE TRIGGER trg_after_update_estado_propiedad
 AFTER UPDATE ON propiedad
 FOR EACH ROW
 BEGIN
+    -- Manejador de errores: si algo falla, registra en logs_errores
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        INSERT INTO logs_errores (
+            Fecha_Error,
+            Nombre_Error,
+            Lugar_Error,
+            Detalle
+        )
+        VALUES (
+            NOW(),
+            'ERROR EN TRIGGER: trg_after_update_estado_propiedad',
+            'Tabla: propiedad | Trigger: AFTER UPDATE',
+            CONCAT('Propiedad_ID: ', NEW.Propiedad_ID,
+                   ' | Estado anterior: ', OLD.EstadoP_ID,
+                   ' | Estado nuevo: ', NEW.EstadoP_ID)
+        );
+    END;
+
+    -- Solo actúa si el estado realmente cambió
     IF OLD.EstadoP_ID <> NEW.EstadoP_ID THEN
+
+        -- 1. Registrar en tabla de auditoría de propiedad
         INSERT INTO auditoriapropiedad (
             Audit_ID,
             Propiedad_ID,
@@ -34,18 +54,65 @@ BEGIN
             COALESCE(@usuario_actual, 'SISTEMA'),
             NOW()
         );
+
+        -- 2. Registrar en logs_cambios
+        INSERT INTO logs_cambios (
+            Fecha_Cambio,
+            Nombre_Cambio,
+            Lugar_Cambio,
+            Descripcion
+        )
+        VALUES (
+            NOW(),
+            'CAMBIO ESTADO PROPIEDAD',
+            'Tabla: propiedad | Trigger: trg_after_update_estado_propiedad',
+            CONCAT('Propiedad_ID: ', NEW.Propiedad_ID,
+                   ' | Estado anterior: ', OLD.EstadoP_ID,
+                   ' | Estado nuevo: ', NEW.EstadoP_ID,
+                   ' | Usuario: ', COALESCE(@usuario_actual, 'SISTEMA'))
+        );
+
     END IF;
 END$$
+
+DELIMITER ;
+
 
 -- ============================================================
 -- TRIGGER 2: Registro de un nuevo contrato
 -- Registra en auditoriacontrato cuando se inserta un contrato
+-- Registra en logs_cambios el evento
+-- Registra en logs_errores si ocurre un fallo
 -- ============================================================
+
+DELIMITER $$
 
 CREATE TRIGGER trg_after_insert_contrato
 AFTER INSERT ON contratos
 FOR EACH ROW
 BEGIN
+    -- Manejador de errores: si algo falla, registra en logs_errores
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        INSERT INTO logs_errores (
+            Fecha_Error,
+            Nombre_Error,
+            Lugar_Error,
+            Detalle
+        )
+        VALUES (
+            NOW(),
+            'ERROR EN TRIGGER: trg_after_insert_contrato',
+            'Tabla: contratos | Trigger: AFTER INSERT',
+            CONCAT('Contrato_ID: ', NEW.Contrato_ID,
+                   ' | Tipo: ', NEW.Tipo_Contrato,
+                   ' | Cliente_ID: ', NEW.Cliente_ID,
+                   ' | Agente_ID: ', NEW.Agente_ID,
+                   ' | Propiedad_ID: ', NEW.Propiedad_ID)
+        );
+    END;
+
+    -- 1. Registrar en tabla de auditoría de contrato
     INSERT INTO auditoriacontrato (
         AuditCon_ID,
         Contrato_ID,
@@ -57,16 +124,34 @@ BEGIN
     VALUES (
         CONCAT('AC-', UUID_SHORT()),
         NEW.Contrato_ID,
-        CONCAT(
-            'NUEVO CONTRATO | Tipo: ', NEW.Tipo_Contrato,
-            ' | Cliente_ID: ', NEW.Cliente_ID,
-            ' | Agente_ID: ', NEW.Agente_ID,
-            ' | Propiedad_ID: ', NEW.Propiedad_ID
-        ),
+        CONCAT('NUEVO CONTRATO | Tipo: ', NEW.Tipo_Contrato,
+               ' | Cliente_ID: ', NEW.Cliente_ID,
+               ' | Agente_ID: ', NEW.Agente_ID,
+               ' | Propiedad_ID: ', NEW.Propiedad_ID),
         NEW.Fecha_Contrato,
         COALESCE(@usuario_actual, 'SISTEMA'),
         NOW()
     );
+
+    -- 2. Registrar en logs_cambios
+    INSERT INTO logs_cambios (
+        Fecha_Cambio,
+        Nombre_Cambio,
+        Lugar_Cambio,
+        Descripcion
+    )
+    VALUES (
+        NOW(),
+        'NUEVO CONTRATO REGISTRADO',
+        'Tabla: contratos | Trigger: trg_after_insert_contrato',
+        CONCAT('Contrato_ID: ', NEW.Contrato_ID,
+               ' | Tipo: ', NEW.Tipo_Contrato,
+               ' | Cliente_ID: ', NEW.Cliente_ID,
+               ' | Agente_ID: ', NEW.Agente_ID,
+               ' | Propiedad_ID: ', NEW.Propiedad_ID,
+               ' | Usuario: ', COALESCE(@usuario_actual, 'SISTEMA'))
+    );
+
 END$$
 
 DELIMITER ;

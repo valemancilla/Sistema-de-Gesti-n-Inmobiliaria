@@ -1,9 +1,4 @@
--- ================================================================
---  SISTEMA DE GESTIÓN INMOBILIARIA
---  Script DDL + DML — Creación de base de datos
---  Modelo normalizado hasta 3FN  |  20 tablas
---  Motor: MySQL 8.0+
--- ================================================================
+
 
 DROP DATABASE IF EXISTS inmobiliaria_db;
 CREATE DATABASE inmobiliaria_db
