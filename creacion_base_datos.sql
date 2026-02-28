@@ -1,5 +1,3 @@
-
-
 DROP DATABASE IF EXISTS inmobiliaria_db;
 CREATE DATABASE inmobiliaria_db
     CHARACTER SET utf8mb4
@@ -14,7 +12,6 @@ USE inmobiliaria_db;
 
 -- ------------------------------------------------------------
 -- Ciudad
--- PK: Ciudad_ID
 -- ------------------------------------------------------------
 CREATE TABLE Ciudad (
     Ciudad_ID     VARCHAR(10)  NOT NULL,
@@ -25,8 +22,6 @@ CREATE TABLE Ciudad (
 
 -- ------------------------------------------------------------
 -- Barrio
--- PK: Barrio_ID
--- FK: Ciudad_ID → Ciudad
 -- ------------------------------------------------------------
 CREATE TABLE Barrio (
     Barrio_ID     VARCHAR(10)  NOT NULL,
@@ -40,7 +35,6 @@ CREATE TABLE Barrio (
 
 -- ------------------------------------------------------------
 -- TipoPropiedad
--- PK: TipoP_ID
 -- ------------------------------------------------------------
 CREATE TABLE TipoPropiedad (
     TipoP_ID    VARCHAR(10) NOT NULL,
@@ -50,7 +44,6 @@ CREATE TABLE TipoPropiedad (
 
 -- ------------------------------------------------------------
 -- EstadoPropiedad
--- PK: EstadoP_ID
 -- ------------------------------------------------------------
 CREATE TABLE EstadoPropiedad (
     EstadoP_ID  VARCHAR(10) NOT NULL,
@@ -60,7 +53,6 @@ CREATE TABLE EstadoPropiedad (
 
 -- ------------------------------------------------------------
 -- EstadoPago
--- PK: EstadoPago_ID
 -- ------------------------------------------------------------
 CREATE TABLE EstadoPago (
     EstadoPago_ID VARCHAR(10) NOT NULL,
@@ -70,7 +62,6 @@ CREATE TABLE EstadoPago (
 
 -- ------------------------------------------------------------
 -- Rol
--- PK: Rol_ID
 -- ------------------------------------------------------------
 CREATE TABLE Rol (
     Rol_ID      VARCHAR(10)  NOT NULL,
@@ -85,7 +76,6 @@ CREATE TABLE Rol (
 
 -- ------------------------------------------------------------
 -- Personas  (superentidad de Cliente y Agente)
--- PK: Persona_ID
 -- ------------------------------------------------------------
 CREATE TABLE Personas (
     Persona_ID VARCHAR(10)  NOT NULL,
@@ -99,8 +89,6 @@ CREATE TABLE Personas (
 
 -- ------------------------------------------------------------
 -- Clientes
--- PK: Cliente_ID
--- FK: Persona_ID → Personas
 -- ------------------------------------------------------------
 CREATE TABLE Clientes (
     Cliente_ID VARCHAR(10) NOT NULL,
@@ -114,8 +102,6 @@ CREATE TABLE Clientes (
 
 -- ------------------------------------------------------------
 -- Agentes
--- PK: Agente_ID
--- FK: Persona_ID → Personas
 -- ------------------------------------------------------------
 CREATE TABLE Agentes (
     Agente_ID    VARCHAR(10)  NOT NULL,
@@ -130,9 +116,6 @@ CREATE TABLE Agentes (
 
 -- ------------------------------------------------------------
 -- UsuarioSistema
--- PK: Usuario_ID
--- FK: Persona_ID → Personas
--- FK: Rol_ID     → Rol
 -- ------------------------------------------------------------
 CREATE TABLE UsuarioSistema (
     Usuario_ID    VARCHAR(10) NOT NULL,
@@ -155,10 +138,6 @@ CREATE TABLE UsuarioSistema (
 
 -- ------------------------------------------------------------
 -- Propiedad
--- PK: Propiedad_ID
--- FK: TipoP_ID   → TipoPropiedad
--- FK: EstadoP_ID → EstadoPropiedad
--- FK: Barrio_ID  → Barrio
 -- ------------------------------------------------------------
 CREATE TABLE Propiedad (
     Propiedad_ID     VARCHAR(10)   NOT NULL,
@@ -185,10 +164,6 @@ CREATE TABLE Propiedad (
 
 -- ------------------------------------------------------------
 -- Contratos  (tabla central)
--- PK: Contrato_ID
--- FK: Cliente_ID   → Clientes
--- FK: Agente_ID    → Agentes
--- FK: Propiedad_ID → Propiedad
 -- ------------------------------------------------------------
 CREATE TABLE Contratos (
     Contrato_ID    VARCHAR(10)              NOT NULL,
@@ -211,8 +186,6 @@ CREATE TABLE Contratos (
 
 -- ------------------------------------------------------------
 -- ContratoArriendo
--- PK: ContrArr_ID
--- FK: Contrato_ID → Contratos  (único: 1 arriendo por contrato)
 -- ------------------------------------------------------------
 CREATE TABLE ContratoArriendo (
     ContrArr_ID   VARCHAR(10)   NOT NULL,
@@ -229,8 +202,6 @@ CREATE TABLE ContratoArriendo (
 
 -- ------------------------------------------------------------
 -- ContratoVenta
--- PK: ContrVenta_ID
--- FK: Contrato_ID → Contratos  (único: 1 venta por contrato)
 -- ------------------------------------------------------------
 CREATE TABLE ContratoVenta (
     ContrVenta_ID   VARCHAR(10)   NOT NULL,
@@ -251,11 +222,6 @@ CREATE TABLE ContratoVenta (
 
 -- ------------------------------------------------------------
 -- Pagos
--- PK: Pago_ID
--- FK: Contrato_ID   → Contratos
--- FK: EstadoPago_ID → EstadoPago
--- CORRECCIÓN: EstadoPago_ID es NOT NULL — todo pago debe tener
--- un estado obligatorio. La relación es obligatoria, no opcional.
 -- ------------------------------------------------------------
 CREATE TABLE Pagos (
     Pago_ID       VARCHAR(10)   NOT NULL,
@@ -278,12 +244,6 @@ CREATE TABLE Pagos (
 
 -- ------------------------------------------------------------
 -- AuditoriaContrato
--- PK: AuditCon_ID
--- FK: Contrato_ID → Contratos
--- FK: Usuario_ID  → UsuarioSistema
--- CORRECCIÓN: Usuario_ID referencia UsuarioSistema con FK real
--- en lugar de texto libre — garantiza trazabilidad con rol
--- del usuario en el momento del evento
 -- ------------------------------------------------------------
 CREATE TABLE AuditoriaContrato (
     AuditCon_ID  VARCHAR(10)  NOT NULL,
@@ -303,15 +263,6 @@ CREATE TABLE AuditoriaContrato (
 
 -- ------------------------------------------------------------
 -- AuditoriaPropiedad
--- PK: Audit_ID
--- FK: Propiedad_ID → Propiedad
--- FK: Usuario_ID   → UsuarioSistema
--- CORRECCIÓN 1: Usuario_ID referencia UsuarioSistema con FK real
--- en lugar de texto libre — garantiza trazabilidad con rol
--- CORRECCIÓN 2: Estado_Anterior y Estado_Nuevo se mantienen
--- como VARCHAR(50) sin FK a EstadoPropiedad — decisión correcta
--- porque es un registro histórico: si un estado se elimina del
--- catálogo la auditoría no debe perder el dato histórico
 -- ------------------------------------------------------------
 CREATE TABLE AuditoriaPropiedad (
     Audit_ID        VARCHAR(10) NOT NULL,
@@ -332,8 +283,6 @@ CREATE TABLE AuditoriaPropiedad (
 
 -- ------------------------------------------------------------
 -- ReportePagos  (tabla destino del evento programado mensual)
--- PK: Reporte_ID
--- FK: Contrato_ID → Contratos
 -- ------------------------------------------------------------
 CREATE TABLE ReportePagos (
     Reporte_ID      VARCHAR(10)   NOT NULL,
@@ -379,28 +328,9 @@ CREATE TABLE Logs_Cambios (
 ) ENGINE=InnoDB;
 
 -- ================================================================
--- BLOQUE 8: ÍNDICES PARA OPTIMIZACIÓN DE CONSULTAS
+-- NOTA: Los índices de optimización se encuentran en el script
+-- optimizacion_eventos_inmobiliaria.sql
 -- ================================================================
-
-CREATE INDEX IDX_Barrio_Ciudad        ON Barrio(Ciudad_ID);
-CREATE INDEX IDX_Propiedad_Tipo       ON Propiedad(TipoP_ID);
-CREATE INDEX IDX_Propiedad_Estado     ON Propiedad(EstadoP_ID);
-CREATE INDEX IDX_Propiedad_Barrio     ON Propiedad(Barrio_ID);
-CREATE INDEX IDX_Contratos_Cliente    ON Contratos(Cliente_ID);
-CREATE INDEX IDX_Contratos_Agente     ON Contratos(Agente_ID);
-CREATE INDEX IDX_Contratos_Prop       ON Contratos(Propiedad_ID);
-CREATE INDEX IDX_Contratos_Tipo       ON Contratos(Tipo_Contrato);
-CREATE INDEX IDX_Pagos_Contrato       ON Pagos(Contrato_ID);
-CREATE INDEX IDX_Pagos_Estado         ON Pagos(EstadoPago_ID);
-CREATE INDEX IDX_Pagos_Fecha          ON Pagos(Fecha_Pago);
-CREATE INDEX IDX_ReportePagos_Periodo ON ReportePagos(Periodo);
-CREATE INDEX IDX_Usuario_Rol          ON UsuarioSistema(Rol_ID);
-CREATE INDEX IDX_AuditCon_Contrato    ON AuditoriaContrato(Contrato_ID);
-CREATE INDEX IDX_AuditProp_Prop       ON AuditoriaPropiedad(Propiedad_ID);
-CREATE INDEX IDX_LogsErrores_Fecha    ON Logs_Errores(Fecha_Error);
-CREATE INDEX IDX_LogsErrores_Lugar    ON Logs_Errores(Lugar_Error);
-CREATE INDEX IDX_LogsCambios_Fecha    ON Logs_Cambios(Fecha_Cambio);
-CREATE INDEX IDX_LogsCambios_Lugar    ON Logs_Cambios(Lugar_Cambio);
 
 -- ================================================================
 -- BLOQUE 9: DML — CATÁLOGOS BASE
@@ -555,4 +485,3 @@ INSERT INTO ReportePagos (Reporte_ID, Contrato_ID, Fecha_Reporte, Monto_Pendient
 ('REP-002', 'CON-003', '2024-04-01', 1200000.00, 'Pago mes 2 pendiente',   '2024-04'),
 ('REP-003', 'CON-001', '2024-03-01',  800000.00, 'Pago mes 3 pendiente',   '2024-03'),
 ('REP-004', 'CON-005', '2024-06-01',  950000.00, 'Pago vencido mayo 2024', '2024-06');
-
