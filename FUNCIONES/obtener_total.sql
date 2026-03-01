@@ -1,4 +1,3 @@
-
 USE inmobiliaria_db;
 
 -- ================================================================
@@ -73,39 +72,9 @@ DELIMITER ;
 SELECT total_disponibles_por_tipo('TP-01');
 SELECT total_disponibles_por_tipo('TP-02');
 
-
 -- ================================================================
--- CONSULTAS RESUMEN
+-- CONSULTA RESUMEN — propiedades disponibles por tipo
 -- ================================================================
-
--- Ver todas las comisiones de ventas
-SELECT
-    c.Contrato_ID,
-    c.Tipo_Contrato,
-    CONCAT(p.Nombre, ' ', p.Apellido)   AS agente,
-    a.Comision_Pct                      AS pct_comision,
-    cv.Precio_Venta                     AS precio_venta,
-    calcular_comision(c.Contrato_ID)    AS comision_calculada
-FROM  contratos c
-JOIN  agentes a          ON a.Agente_ID    = c.Agente_ID
-JOIN  personas p         ON p.Persona_ID   = a.Persona_ID
-JOIN  contratoventa cv   ON cv.Contrato_ID = c.Contrato_ID
-WHERE c.Tipo_Contrato = 'Venta';
-
--- Ver deuda por contrato de arriendo
-SELECT
-    c.Contrato_ID,
-    c.Tipo_Contrato,
-    CONCAT(pc.Nombre, ' ', pc.Apellido)      AS cliente,
-    ca.Valor_Mensual                          AS valor_mensual,
-    calcular_deuda_pendiente(c.Contrato_ID)   AS deuda_pendiente
-FROM  contratos c
-JOIN  clientes cl           ON cl.Cliente_ID  = c.Cliente_ID
-JOIN  personas pc           ON pc.Persona_ID  = cl.Persona_ID
-JOIN  contratoarriendo ca   ON ca.Contrato_ID = c.Contrato_ID
-WHERE c.Tipo_Contrato = 'Arriendo';
-
--- Ver disponibles por tipo de propiedad
 SELECT
     tp.Descripcion                            AS tipo_propiedad,
     total_disponibles_por_tipo(tp.TipoP_ID)   AS disponibles

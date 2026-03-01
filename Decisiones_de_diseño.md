@@ -1,4 +1,4 @@
-Aquí está el texto completo con todo incluido, listo para copiar:
+# Decisiones de Diseño — Sistema de Gestión Inmobiliaria
 
 ---
 
@@ -8,7 +8,7 @@ Una inmobiliaria maneja diariamente información crítica: propiedades, clientes
 
 Este modelo partió de una tabla sin normalizar con 27 columnas que mezclaba absolutamente todo en una sola estructura, y fue llevado paso a paso hasta la Tercera Forma Normal, resultando en 20 tablas organizadas, cada una con una responsabilidad clara y sin redundancia de datos.
 
-El modelo está compuesto por 20 tablas organizadas en 6 grupos funcionales: catálogos base (Ciudad, Barrio, TipoPropiedad, EstadoPropiedad, EstadoPago, Rol), personas (Personas, Clientes, Agentes), propiedades (Propiedad), contratos (Contratos, ContratoArriendo, ContratoVenta), pagos (Pagos), y auditoría (AuditoriaPropiedad, AuditoriaContrato, ReportePagos, Logs_Errores, Logs_Cambios).
+El modelo está compuesto por 20 tablas organizadas en 7 grupos funcionales: catálogos base (Ciudad, Barrio, TipoPropiedad, EstadoPropiedad, EstadoPago, Rol), personas (Personas, Clientes, Agentes, UsuarioSistema), propiedades (Propiedad), contratos (Contratos, ContratoArriendo, ContratoVenta), pagos (Pagos), auditoría (AuditoriaPropiedad, AuditoriaContrato, ReportePagos), y logs de infraestructura (Logs_Errores, Logs_Cambios).
 
 ---
 

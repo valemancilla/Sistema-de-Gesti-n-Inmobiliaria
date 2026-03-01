@@ -15,7 +15,7 @@ VALUES (NOW(), 'ELIMINACIÓN USUARIOS ANÓNIMOS', 'mysql.user',
 
 
 -- ============================================================
--- PASO 2: PROCEDIMIENTO — Crear los 3 usuarios
+-- PASO 2: PROCEDIMIENTO — Crear los 4 usuarios
 -- ============================================================
 
 DROP PROCEDURE IF EXISTS sp_crear_usuarios;
@@ -45,16 +45,18 @@ BEGIN
     DROP USER IF EXISTS 'admin_inmobiliaria'@'localhost';
     DROP USER IF EXISTS 'agente_inmobiliario'@'localhost';
     DROP USER IF EXISTS 'contador_inmobiliaria'@'localhost';
+    DROP USER IF EXISTS 'cliente_inmobiliaria'@'localhost';
 
-    -- Crear los 3 usuarios
+    -- Crear los 4 usuarios
     CREATE USER 'admin_inmobiliaria'@'localhost'    IDENTIFIED BY 'Admin#Inmo2024';
     CREATE USER 'agente_inmobiliario'@'localhost'   IDENTIFIED BY 'Agente#Inmo2024';
     CREATE USER 'contador_inmobiliaria'@'localhost' IDENTIFIED BY 'Contador#Inmo2024';
+    CREATE USER 'cliente_inmobiliaria'@'localhost'  IDENTIFIED BY 'Cliente#Inmo2024';
 
     -- Registrar en logs_cambios si todo salió bien
     INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
     VALUES (NOW(), 'CREACIÓN DE USUARIOS', 'sp_crear_usuarios',
-            'Usuarios creados: admin_inmobiliaria, agente_inmobiliario, contador_inmobiliaria');
+            'Usuarios creados: admin_inmobiliaria, agente_inmobiliario, contador_inmobiliaria, cliente_inmobiliaria');
 
 END$$
 
@@ -211,23 +213,73 @@ CALL sp_privilegios_contador();
 
 
 -- ============================================================
--- PASO 6: APLICAR CAMBIOS
+-- PASO 6: PROCEDIMIENTO — Privilegios Cliente
+-- Solo puede consultar propiedades disponibles
+-- No puede ver contratos, pagos ni datos de otros clientes
+-- Inferido de: "clientes interesados en alquilar o comprar"
+-- y ROL-03 Cliente definido en la tabla Rol del modelo
+-- ============================================================
+
+DROP PROCEDURE IF EXISTS sp_privilegios_cliente;
+
+DELIMITER $$
+
+CREATE PROCEDURE sp_privilegios_cliente()
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        INSERT INTO logs_errores (
+            Fecha_Error,
+            Nombre_Error,
+            Lugar_Error,
+            Detalle
+        )
+        VALUES (
+            NOW(),
+            'ERROR AL ASIGNAR PRIVILEGIOS CLIENTE',
+            'Procedimiento: sp_privilegios_cliente',
+            'Falló la asignación de privilegios a cliente_inmobiliaria'
+        );
+    END;
+
+    -- Solo puede consultar propiedades y su ubicación
+    GRANT SELECT ON inmobiliaria_db.propiedad        TO 'cliente_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.tipopropiedad    TO 'cliente_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.estadopropiedad  TO 'cliente_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.barrio           TO 'cliente_inmobiliaria'@'localhost';
+    GRANT SELECT ON inmobiliaria_db.ciudad           TO 'cliente_inmobiliaria'@'localhost';
+
+    INSERT INTO logs_cambios (Fecha_Cambio, Nombre_Cambio, Lugar_Cambio, Descripcion)
+    VALUES (NOW(), 'PRIVILEGIOS CLIENTE', 'inmobiliaria_db.*',
+            'cliente_inmobiliaria: SELECT solo en propiedad, tipopropiedad, estadopropiedad, barrio y ciudad');
+
+END$$
+
+DELIMITER ;
+
+CALL sp_privilegios_cliente();
+
+
+-- ============================================================
+-- PASO 7: APLICAR CAMBIOS
 -- ============================================================
 
 FLUSH PRIVILEGES;
 
 
 -- ============================================================
--- PASO 7: VERIFICAR PRIVILEGIOS
+-- PASO 8: VERIFICAR PRIVILEGIOS
 -- ============================================================
 
 SHOW GRANTS FOR 'admin_inmobiliaria'@'localhost';
 SHOW GRANTS FOR 'agente_inmobiliario'@'localhost';
 SHOW GRANTS FOR 'contador_inmobiliaria'@'localhost';
+SHOW GRANTS FOR 'cliente_inmobiliaria'@'localhost';
 
 
 -- ============================================================
--- PASO 8: VERIFICAR LOGS
+-- PASO 9: VERIFICAR LOGS
 -- ============================================================
 
 SELECT * FROM logs_cambios ORDER BY Fecha_Cambio DESC;

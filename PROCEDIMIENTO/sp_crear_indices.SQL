@@ -1,5 +1,3 @@
-
-
 USE inmobiliaria_db;
 
 -- ============================================================
@@ -71,20 +69,13 @@ END$$
 
 DELIMITER ;
 
-
--- ============================================================
--- EJECUTAR: primero eliminar, luego crear
--- ============================================================
-
+-- Ejecutar primero eliminar, luego crear
 CALL sp_eliminar_indices();
 CALL sp_crear_indices();
-
 
 -- ============================================================
 -- VERIFICACIONES FINALES
 -- ============================================================
-
-SHOW EVENTS FROM inmobiliaria_db;
 
 SHOW INDEX FROM contratos;
 SHOW INDEX FROM pagos;
@@ -92,5 +83,5 @@ SHOW INDEX FROM propiedad;
 SHOW INDEX FROM reportepagos;
 SHOW INDEX FROM contratoarriendo;
 
-SELECT * FROM logs_cambios ORDER BY Fecha_Cambio DESC;
-SELECT * FROM logs_errores ORDER BY Fecha_Error  DESC;
+SELECT * FROM logs_cambios ORDER BY Fecha_Cambio DESC LIMIT 5;
+SELECT * FROM logs_errores ORDER BY Fecha_Error  DESC LIMIT 5;

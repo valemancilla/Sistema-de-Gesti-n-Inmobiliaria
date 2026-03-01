@@ -1,6 +1,7 @@
+USE inmobiliaria_db;
 
 -- ============================================================
--- PARTE 2: EVENTO PROGRAMADO MENSUAL
+-- EVENTO PROGRAMADO MENSUAL
 -- Se ejecuta automáticamente cada mes
 -- Inserta en reportepagos los contratos de arriendo
 -- con pagos pendientes o vencidos
@@ -76,18 +77,11 @@ END$$
 
 DELIMITER ;
 
-
 -- ============================================================
 -- VERIFICACIONES FINALES
 -- ============================================================
 
 SHOW EVENTS FROM inmobiliaria_db;
 
-SHOW INDEX FROM contratos;
-SHOW INDEX FROM pagos;
-SHOW INDEX FROM propiedad;
-SHOW INDEX FROM reportepagos;
-SHOW INDEX FROM contratoarriendo;
-
-SELECT * FROM logs_cambios ORDER BY Fecha_Cambio DESC;
-SELECT * FROM logs_errores ORDER BY Fecha_Error  DESC;
+SELECT * FROM logs_cambios ORDER BY Fecha_Cambio DESC LIMIT 5;
+SELECT * FROM logs_errores ORDER BY Fecha_Error  DESC LIMIT 5;
