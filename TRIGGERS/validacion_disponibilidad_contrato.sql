@@ -1,7 +1,7 @@
 USE inmobiliaria_db;
 
 -- ============================================================
--- TRIGGER 4: Validación de disponibilidad antes de crear contrato
+-- TRIGGER 3: Validación de disponibilidad antes de crear contrato
 -- Verifica que la propiedad esté en estado Disponible (EP-01)
 -- antes de permitir el INSERT en contratos.
 -- Si no está disponible cancela la operación con SIGNAL

@@ -51,7 +51,7 @@ inmobiliaria_db/
 ├── optimizacion/
 │   ├── sp_eliminar_indices.sql            # Elimina los 12 índices (CONTINUE HANDLER)
 │   ├── sp_crear_indices.sql               # Crea los 12 índices (EXIT HANDLER)
-│   └── particiones.sql                    # Particionamiento RANGE por año en tabla Pagos
+│   └── particiones.sql                    # Particionamiento RANGE por año en tabla ReportePagos
 │
 ├── eventos/
 │   └── evento_programado_mensual.sql      # Evento automático mensual de pagos pendientes
@@ -224,7 +224,7 @@ El modelo parte de una **tabla sin normalizar de 27 columnas** con todo mezclado
 
 | Tabla | Descripción |
 |---|---|
-| `Pagos` | Historial de pagos individuales por contrato. Particionada por año. |
+| `Pagos` | Historial de pagos individuales por contrato. |
 
 ---
 
@@ -261,7 +261,7 @@ El modelo parte de una **tabla sin normalizar de 27 columnas** con todo mezclado
 | Evento programado | 1 | Reporte mensual automático |
 | Vistas | 3 | Interfaz simplificada para consultas |
 | Procedimientos CRUD | 16 | 4 operaciones × 4 entidades principales |
-| Particiones | 5 | RANGE por año en tabla Pagos |
+| Particiones | 5 | RANGE por año en tabla ReportePagos |
 
 ---
 
@@ -423,14 +423,14 @@ SHOW EVENTS FROM inmobiliaria_db;
 
 -- Verificar índices
 SHOW INDEX FROM contratos;
-SHOW INDEX FROM pagos;
+
 SHOW INDEX FROM propiedad;
 
 -- Verificar particiones de Pagos
 SELECT PARTITION_NAME, PARTITION_DESCRIPTION, TABLE_ROWS
 FROM information_schema.PARTITIONS
 WHERE TABLE_SCHEMA = 'inmobiliaria_db'
-  AND TABLE_NAME   = 'pagos'
+  AND TABLE_NAME   = 'reportepagos'
 ORDER BY PARTITION_ORDINAL_POSITION;
 
 -- Verificar privilegios de usuarios
@@ -524,8 +524,8 @@ Cada tabla del modelo resolvió un problema concreto del diseño original: redun
 - Antes de operar con triggers de auditoría, definir el usuario de sesión: `SET @usuario_actual = 'USR-XX';`
 - El evento mensual requiere: `SET GLOBAL event_scheduler = ON;`
 - Para re-ejecutar cualquier script sin errores, cada uno incluye `DROP IF EXISTS` antes de crear
-- El particionamiento de Pagos elimina las FK de esa tabla — limitación documentada de MySQL con tablas particionadas
+- El particionamiento de ReportePagos elimina su FK hacia Contratos — limitación documentada de MySQL con tablas particionadas. La integridad se garantiza desde el evento programado que solo inserta contratos válidos.
 
 
 ## AUTORA 
-- valentina mancilla 
+- valentina mancilla

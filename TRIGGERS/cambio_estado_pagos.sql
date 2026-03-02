@@ -1,7 +1,7 @@
 USE inmobiliaria_db;
 
 -- ============================================================
--- TRIGGER 3: Cambio de estado de un pago
+-- TRIGGER 4: Cambio de estado de un pago
 -- Registra en logs_cambios cuando EstadoPago_ID cambia
 -- Registra en logs_errores si ocurre un fallo
 -- ============================================================
