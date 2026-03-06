@@ -115,8 +115,73 @@ ORDER BY p.Precio_Propiedad DESC
 LIMIT 5;
 
 
--- ==================================================
--- Script de base de datos con los datos solicitados.
--- ==================================================
+-- ================================================================
+-- VISTA 1: vista_propiedades_por_ciudad
+-- Muestra propiedades agrupadas por ciudad con precio promedio
+-- Uso: Consulta de inventario por ubicación geográfica
+-- ================================================================
+
+DROP VIEW IF EXISTS vista_propiedades_por_ciudad;
+
+CREATE VIEW vista_propiedades_por_ciudad AS
+SELECT 
+    c.Nombre_Ciudad AS ciudad,
+    c.Departamento AS departamento,
+    COUNT(p.Propiedad_ID) AS total_propiedades,
+    ROUND(AVG(p.Precio_Propiedad), 2) AS precio_promedio,
+    MAX(p.Precio_Propiedad) AS precio_maximo,
+    MIN(p.Precio_Propiedad) AS precio_minimo
+FROM Propiedad p
+INNER JOIN Barrio b ON p.Barrio_ID = b.Barrio_ID
+INNER JOIN Ciudad c ON b.Ciudad_ID = c.Ciudad_ID
+GROUP BY c.Ciudad_ID, c.Nombre_Ciudad, c.Departamento;
+
+
+-- ================================================================
+-- VISTA 2: vista_agentes_propiedades
+-- Muestra información de agentes con propiedades administradas
+-- Uso: Reporte de agentes y sus propiedades
+-- ================================================================
+
+DROP VIEW IF EXISTS vista_agentes_propiedades;
+
+CREATE VIEW vista_agentes_propiedades AS
+SELECT 
+    per.Nombre AS nombre_agente,
+    per.Apellido AS apellido_agente,
+    COUNT(p.Propiedad_ID) AS cantidad_propiedades,
+    c.Nombre_Ciudad AS ciudad_principal
+FROM Agentes age
+INNER JOIN Personas per ON age.Persona_ID = per.Persona_ID
+INNER JOIN Contratos con ON age.Agente_ID = con.Agente_ID
+INNER JOIN Propiedad p ON con.Propiedad_ID = p.Propiedad_ID
+INNER JOIN Barrio b ON p.Barrio_ID = b.Barrio_ID
+INNER JOIN Ciudad c ON b.Ciudad_ID = c.Ciudad_ID
+GROUP BY age.Agente_ID, per.Nombre, per.Apellido, c.Nombre_Ciudad;
+
+
+-- ================================================================
+-- ÍNDICES DE OPTIMIZACIÓN
+-- Índices simples y compuestos para mejorar rendimiento
+-- ================================================================
+
+-- Índice compuesto: propiedades por ciudad y estado
+CREATE INDEX idx_prop_ciudad_estado 
+ON Propiedad (Barrio_ID, EstadoP_ID);
+
+-- Índice compuesto: contratos por tipo y fecha
+CREATE INDEX idx_contrato_tipo_fecha 
+ON Contratos (Tipo_Contrato, Fecha_Contrato);
+
+-- Índice simple: pagos por contrato
+CREATE INDEX idx_pagos_contrato 
+ON Pagos (Contrato_ID);
+
+-- Índice simple: propiedades por estado
+CREATE INDEX idx_propiedad_estado 
+ON Propiedad (EstadoP_ID);
+
+
+
 
 
